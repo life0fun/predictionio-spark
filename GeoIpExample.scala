@@ -36,8 +36,8 @@ object GeoIpExample {
   
     val invalidLineCounter = sc.accumulator(0)
     val inFile = sc.textFile(inputFile)  // geo mapping file passed in as
-    // parse data, foreach line, emit Tuple(_, ipAddr)
-    val parsedInput = inFile.flatMap(
+    // emit Tuple(_, ipAddr) foreach line, 
+    val ipAddrs = inFile.flatMap(
       line => {
         try {
           val row = (new CSVReader(new StringReader(line))).readNext()
@@ -50,26 +50,30 @@ object GeoIpExample {
           }
         }
       })
+    // addFile sends file to all workers. worker uses SparkFiles.get(path:String) to access file.
     // GeoLiteCity.dat contains snowplowanalytics IpGeo rows.
     val geoFile = sc.addFile(maxMindPath)
     
     // ipCountries <= map (_, ipAddr) => (ipAddr, countryCode)
     // mapWith (constructA: _ => IpGeo) (f: (T, A) => U)
-    val ipCountries = parsedInput.flatMapWith
-      (_ => IpGeo(dbFile = SparkFiles.get(maxMindPath)))  // per partition constructA pass to map (f: (T, A) => U)
+    val ipCountries = ipAddrs.flatMapWith
+      (_ => IpGeo(dbFile = SparkFiles.get(maxMindPath)))  // constructA per partition pass to map (f: (T, A) => U)
       ((pair, ipGeo) => {  // map (f: (T, A) => U) takes additional param constructA per partition
         //getLocation gives back an option so we use flatMap to only output if it's a some type
+        // for ipAddr not in ipGeo, option is None.
         ipGeo.getLocation(pair._1).map(
-          c => 
+          c =>  // map ipAddr to ipGeo.countryCode 
             (pair._1, c.countryCode)).toSeq
       })
-    ipCountries.cache()
+    ipCountries.cache()  // (ipAddr[1], countryCode)
     
+    // send computation partition to each node, and collect full knowledge back.
+    // collect ipCountries segments from each partition and and form a complete countries map and bcast to all.
     val countries = ipCountries.values.distinct().collect()
     val countriesBc = sc.broadcast(countries)
-    // this RDD is (ipAddr, 0/1)
+    // countriesSignal convert ipCountres (ipAddr, code) to (ipAddr, 0/1)
     val countriesSignal = ipCountries.mapValues(
-      // if our data contains the country, set flag to 1 means we cover the country.
+      // if ipCountries(ipAddr, code) not in countriesBc, emit 0.
       country =>  // lookup all countriesBc, if row of ipCountries in countriesBc, emit 1.
         countriesBc.value.map(
           s => if (country == s) 1
@@ -77,7 +81,7 @@ object GeoIpExample {
         )
     )
     // dataPoints is 2 column from joining 
-    val dataPoints = parsedInput.join(countriesSignal).map(
+    val dataPoints = ipAddrs.join(countriesSignal).map(
       input => {
         input._2 match {
           case (countryData, originalData) =>
