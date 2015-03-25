@@ -74,13 +74,13 @@ object GeoIpExample {
     // countriesSignal convert ipCountres (ipAddr, code) to (ipAddr, 0/1)
     val countriesSignal = ipCountries.mapValues(
       // if ipCountries(ipAddr, code) not in countriesBc, emit 0.
-      country =>  // lookup all countriesBc, if row of ipCountries in countriesBc, emit 1.
+      country =>  // mapValues(), if row of ipCountries in countriesBc, emit 1.
         countriesBc.value.map(
           s => if (country == s) 1
                else 0 
         )
     )
-    // dataPoints is 2 column from joining 
+    // (_, (ipAddr, 0/1 )
     val dataPoints = ipAddrs.join(countriesSignal).map(
       input => {
         input._2 match {
