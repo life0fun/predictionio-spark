@@ -6,6 +6,9 @@ scalaVersion := "2.9.3"
 
 name := "fastdataprocessingwithsparkexamples"
 
+mainClass in (Compile, packageBin) := Some("pandaspark.examples.GeoIpExample")
+mainClass in (Compile, run) := Some("pandaspark.examples.GeoIpExample")
+
 parallelExecution in Test := false
 
 libraryDependencies ++= Seq(

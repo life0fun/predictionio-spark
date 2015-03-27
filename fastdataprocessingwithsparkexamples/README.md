@@ -22,4 +22,13 @@ to make a deployable jar run
 2. To enforce a version, use force().
   "org.slf4j" % "slf4j-log4j12" % "1.6.1" force(),
 
-2. https://github.com/sbt/sbt-native-packager/issues/291
+  Eviction rule:
+    https://typesafe.com/blog/improved-dependency-management-with-sbt-0137
+    https://github.com/sbt/sbt-native-packager/issues/291
+
+3. sbt 'show discoveredMainClasses'
+   sbt run <args>
+   sbt "run-main com.alvinalexander.Foo"
+   sbt "project foo" "run arg1 arg2"
+
+4. 
