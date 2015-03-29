@@ -5,16 +5,19 @@ For the GeoIp example you will have to download and install the maxmind GeoIp da
 
 sbt/sbt sbt-version
 
-To build run 
-	sbt/sbt compile and 
+To build
+	sbt/sbt compile
 
-to package run 
-	sbt/sbt package or 
+to package
+	sbt/sbt package
 
 to make a deployable jar run 
 	sbt/sbt assembly
 
+
 ## sbt 
+
+Note spark 1.2 only works with scala 2.9.3. Need to modify scala formulor to install scala 2.9.3.
 
 1. To view dependency tree
 	sbt dependency-tree
@@ -31,4 +34,17 @@ to make a deployable jar run
    sbt "run-main com.alvinalexander.Foo"
    sbt "project foo" "run arg1 arg2"
 
-4. 
+4.
+
+
+## Run on Spark
+
+We can run sbt package to create jar file and use spark-submit to run it.
+
+1. brew install apache-spark
+
+2. spark-submit with args.
+ spark-submit --verbose --master local[4] \
+  --class pandaspark.examples.GeoIpExample  \
+  target/scala-2.9.3/fastdataprocessingwithsparkexamples_2.9.3-0.1-SNAPSHOT.jar \ local[4]  example_partailly_invalid.csv
+

@@ -33,7 +33,8 @@ resolvers ++= Seq(
    "Twitter Maven Repo" at "http://maven.twttr.com/"
 )
 
-mergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
+mergeStrategy in assembly <<= (mergeStrategy in assembly) {
+  (old) =>
   {
     case m if m.toLowerCase.endsWith("manifest.mf") => MergeStrategy.discard
     case PathList("javax", "servlet", xs @ _*) => MergeStrategy.first
