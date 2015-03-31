@@ -2,7 +2,8 @@ import AssemblyKeys._
 
 assemblySettings
 
-scalaVersion := "2.9.3"
+//scalaVersion := "2.9.3"
+scalaVersion := "2.10.4"
 
 name := "fastdataprocessingwithsparkexamples"
 
@@ -12,7 +13,8 @@ mainClass in (Compile, run) := Some("pandaspark.examples.GeoIpExample")
 parallelExecution in Test := false
 
 libraryDependencies ++= Seq(
-    "org.spark-project" % "spark-core_2.9.3" % "0.7.2",
+    //"org.spark-project" % "spark-core_2.9.3" % "0.7.2",
+    "org.apache.spark" %% "spark-core" % "1.2.1",
     "net.sf.opencsv" % "opencsv" % "2.0",
     "org.apache.hbase" % "hbase" % "0.94.6",
     "org.slf4j" % "slf4j-log4j12" % "1.6.1" force(),
@@ -33,9 +35,9 @@ resolvers ++= Seq(
    "Twitter Maven Repo" at "http://maven.twttr.com/"
 )
 
-mergeStrategy in assembly <<= (mergeStrategy in assembly) {
-  (old) =>
+mergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
   {
+    case PathList("META-INF", xs @ _*) => MergeStrategy.discard
     case m if m.toLowerCase.endsWith("manifest.mf") => MergeStrategy.discard
     case PathList("javax", "servlet", xs @ _*) => MergeStrategy.first
     case PathList("org", "apache", xs @ _*) => MergeStrategy.first

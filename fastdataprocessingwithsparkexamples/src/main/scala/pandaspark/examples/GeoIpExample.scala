@@ -2,10 +2,11 @@
 package pandaspark.examples
 
 import scala.math
-import spark.SparkContext
-import spark.SparkContext._
-import spark.SparkFiles;
-import spark.util.Vector
+import org.apache.spark.SparkContext
+import org.apache.spark.SparkContext._
+import org.apache.spark.SparkConf
+import org.apache.spark.SparkFiles
+import org.apache.spark.util.Vector
 import au.com.bytecode.opencsv.CSVReader
 import java.util.Random
 import java.io.StringReader
@@ -30,11 +31,13 @@ object GeoIpExample {
     val inputFile = args(1)
     val iterations = 100
     val maxMindPath = "GeoLiteCity.dat"
-    val sc = new SparkContext(master, "GeoIpExample", 
-                              System.getenv("SPARK_HOME"),
-                              Seq(System.getenv("JARS")))
+    val conf = new SparkConf()
+    val sc = new SparkContext(conf)
+    // val sc = new SparkContext(master, "GeoIpExample", 
+    //                           System.getenv("SPARK_HOME"),
+    //                           Seq(System.getenv("JARS")))
   
-    val invalidLineCounter = sc.accumulator(0)
+    // val invalidLineCounter = sc.accumulator(0)
     val inFile = sc.textFile(inputFile)  // geo mapping file passed in as
     // emit Tuple(_, ipAddr) foreach line, 
     val ipAddrs = inFile.flatMap(
@@ -45,7 +48,7 @@ object GeoIpExample {
         }
         catch {
           case _ => {
-            invalidLineCounter += 1
+            // invalidLineCounter += 1
             None
           }
         }
