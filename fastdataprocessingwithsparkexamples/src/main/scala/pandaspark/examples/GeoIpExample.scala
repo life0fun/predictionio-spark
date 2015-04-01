@@ -1,7 +1,10 @@
 
 package pandaspark.examples
 
+
 import scala.math
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.SparkConf
@@ -27,6 +30,8 @@ object GeoIpExample {
       System.err.println("Usage: GeoIpExample <master> <inputfile>")
       System.exit(1)
     }
+    val logger = LoggerFactory.getLogger("GeoIpExample")
+
     val master = args(0)   // local[n]: for a local mode, spark://[sparkip]: to point to a Spark cluster
     val inputFile = args(1)
     val iterations = 100
@@ -68,6 +73,7 @@ object GeoIpExample {
             (pair._1, c.countryCode)).toSeq
       })
     ipCountries.cache()  // (ipAddr[1], countryCode)
+    logger.debug("ipCountries is ", ipCountries)
 
     // send computation partition to each node, and collect full knowledge back.
     // collect ipCountries segments from each partition and and form a complete countries map and bcast to all.

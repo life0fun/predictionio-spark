@@ -17,6 +17,10 @@ to make a deployable jar run
 To assemble all dependency jars,
   sbt assemblyPackageDependency
 
+All:
+  sbt clean package assemblyPackageDependency
+
+
 ## sbt 
 
 Note spark 1.2 only works with scala 2.9.3. Need to modify scala formulor to install scala 2.9.3.
@@ -57,5 +61,5 @@ We can run sbt package to create jar file and use spark-submit to run it.
   spark-submit --verbose \
   --jars target/scala-2.10/fastdataprocessingwithsparkexamples-assembly-0.1-SNAPSHOT-deps.jar \
   --master local[4] \
-  --class pandaspark.examples.GeoIpExample target/scala-2.10/fastdataprocessingwithsparkexamples_2.10-0.1-SNAPSHOT.jar local[4] example_partailly_invalid.csv 
+  --class pandaspark.examples.GeoIpExample target/scala-2.10/fastdataprocessingwithsparkexamples_2.10-0.1-SNAPSHOT.jar local[4] ip_delay.csv
 
