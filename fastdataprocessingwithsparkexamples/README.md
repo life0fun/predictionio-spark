@@ -54,6 +54,7 @@ We can run sbt package to create jar file and use spark-submit to run it.
 1. brew install apache-spark
 
 2. spark-submit with args.
+  the application jar along with any jars included with the --jars option will be automatically transferred to the cluster.
 
   spark-submit --jars $(echo /dir/of/jars/*.jar | tr ' ' ',') \
     --class "SimpleApp" --master local[4] path/to/myApp.jar

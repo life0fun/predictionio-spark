@@ -35,7 +35,7 @@ object GeoIpExample {
     val master = args(0)   // local[n]: for a local mode, spark://[sparkip]: to point to a Spark cluster
     val inputFile = args(1)
     val iterations = 100
-    val maxMindPath = "GeoLiteCity.dat"
+    val geoCityFile = "GeoLiteCity.dat"
     val conf = new SparkConf()
     val sc = new SparkContext(conf)
     // val sc = new SparkContext(master, "GeoIpExample", 
@@ -43,13 +43,14 @@ object GeoIpExample {
     //                           Seq(System.getenv("JARS")))
   
     // val invalidLineCounter = sc.accumulator(0)
-    val inFile = sc.textFile(inputFile)  // geo mapping file passed in as
-    // emit Tuple(_, ipAddr) foreach line, 
-    val ipAddrs = inFile.flatMap(
+    val ipDelays = sc.textFile(inputFile)  // geo mapping file passed in as
+    // emit tuple2 (1.179.147.2,[D@6c350511) => 1.179.147.2 : 1385.0 248.997
+    // ipAddrs.foreach(a => {println(a._1 + " : " + a._2.mkString(" "))})
+    val ipAddrs = ipDelays.flatMap(
       line => {
         try {
           val row = (new CSVReader(new StringReader(line))).readNext()
-          Some((row(0), row.drop(1).map(_.toDouble)))
+          Some((row(0), row.drop(1).map(_.toDouble)))  // a some tuple2 of (String, Array).
         }
         catch {
           case _ => {
@@ -58,26 +59,28 @@ object GeoIpExample {
           }
         }
       })
+
     // addFile sends file to all workers. worker uses SparkFiles.get(path:String) to access file.
     // GeoLiteCity.dat contains snowplowanalytics IpGeo rows.
-    val geoFile = sc.addFile(maxMindPath)
-    
-    // ipCountries <= map (_, ipAddr) => (ipAddr, countryCode)
-    // mapWith (constructA: _ => IpGeo) (f: (T, A) => U)
-     // constructA per partition pass to map (f: (T, A) => U)
-    val ipCountries = ipAddrs.flatMapWith(_ => IpGeo(dbFile = SparkFiles.get(maxMindPath)))((pair, ipGeo) => {
+    val geoFile = sc.addFile(geoCityFile)
+    // ipCountries create map (ip, countryCode)
+    // mapWith fn takes addition param gened by (constructA: _ => IpGeo) (f: (T, A) => U)
+    // constructA per partition pass to map (f: (T, A) => U)
+    val ipCountries = ipAddrs.flatMapWith(_ => IpGeo(dbFile = SparkFiles.get(geoCityFile)))((pair, ipGeo) => {
         //getLocation gives back an option so we use flatMap to only output if it's a some type
-        // for ipAddr not in ipGeo, option is None.
+        // ipAddr row is tuple2, (1.179.147.2, [1385.0 248.997])
         ipGeo.getLocation(pair._1).map(
-          c =>  // map ipAddr to ipGeo.countryCode 
+          c =>  // map ipAddr to ipGeo.countryCode
+            logger.info("ipCountries " + c + " pair._1 " + pair._1)
             (pair._1, c.countryCode)).toSeq
       })
-    ipCountries.cache()  // (ipAddr[1], countryCode)
-    logger.debug("ipCountries is ", ipCountries)
+    ipCountries.cache()  // (ipAddr._1, countryCode)
+    logger.info("ipCountries is " + ipCountries.foreach(println))
 
     // send computation partition to each node, and collect full knowledge back.
     // collect ipCountries segments from each partition and and form a complete countries map and bcast to all.
     val countries = ipCountries.values.distinct().collect()
+    logger.info("countries values : " + countries)
     val countriesBc = sc.broadcast(countries)
 
     // countriesSignal convert ipCountres (ipAddr, code) to (ipAddr, 0/1)
@@ -89,7 +92,7 @@ object GeoIpExample {
                else 0.
         )
     )
-    // (_, (ipAddr, 0/1 )
+    // (1.179.147.2 [1385.0 248.997])
     val dataPoints = ipAddrs.join(countriesSignal).map(
       input => {
         input._2 match {

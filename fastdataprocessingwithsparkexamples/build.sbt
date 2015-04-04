@@ -2,7 +2,6 @@ import AssemblyKeys._
 
 assemblySettings
 
-//scalaVersion := "2.9.3"
 scalaVersion := "2.10.4"
 
 name := "fastdataprocessingwithsparkexamples"
