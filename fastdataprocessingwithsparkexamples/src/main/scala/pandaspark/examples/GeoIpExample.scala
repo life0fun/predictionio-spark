@@ -42,9 +42,9 @@ object GeoIpExample {
     //                           System.getenv("SPARK_HOME"),
     //                           Seq(System.getenv("JARS")))
   
-    // val invalidLineCounter = sc.accumulator(0)
+    val invalidLineCounter = sc.accumulator(0)
     val ipDelays = sc.textFile(inputFile)  // geo mapping file passed in as
-    // emit tuple2 (1.179.147.2,[D@6c350511) => 1.179.147.2 : 1385.0 248.997
+    // tuple2 (x.x.x.x,[D@6c350511) => 1.179.147.2 : [1385.0 248.997]
     // ipAddrs.foreach(a => {println(a._1 + " : " + a._2.mkString(" "))})
     val ipAddrs = ipDelays.flatMap(
       line => {
@@ -54,7 +54,7 @@ object GeoIpExample {
         }
         catch {
           case _ => {
-            // invalidLineCounter += 1
+            invalidLineCounter += 1
             None
           }
         }
@@ -68,10 +68,9 @@ object GeoIpExample {
     // constructA per partition pass to map (f: (T, A) => U)
     val ipCountries = ipAddrs.flatMapWith(_ => IpGeo(dbFile = SparkFiles.get(geoCityFile)))((pair, ipGeo) => {
         //getLocation gives back an option so we use flatMap to only output if it's a some type
-        // ipAddr row is tuple2, (1.179.147.2, [1385.0 248.997])
+        // ipAddr row tuple2 (1.179.147.2, [1385.0 248.997]), call to ipGeo(x.x.x.x) rets ipGeo object.
         ipGeo.getLocation(pair._1).map(
           c =>  // map ipAddr to ipGeo.countryCode
-            logger.info("ipCountries " + c + " pair._1 " + pair._1)
             (pair._1, c.countryCode)).toSeq
       })
     ipCountries.cache()  // (ipAddr._1, countryCode)
