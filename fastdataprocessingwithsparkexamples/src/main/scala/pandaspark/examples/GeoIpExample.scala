@@ -63,7 +63,7 @@ object GeoIpExample {
     // addFile sends file to all workers. worker uses SparkFiles.get(path:String) to access file.
     // GeoLiteCity.dat contains snowplowanalytics IpGeo rows.
     val geoFile = sc.addFile(geoCityFile)
-    // ipCountries create map (ip, countryCode)
+    // ipCountries is sequence of (x.x.x.x code) each row.
     // mapWith fn takes addition param gened by (constructA: _ => IpGeo) (f: (T, A) => U)
     // constructA per partition pass to map (f: (T, A) => U)
     val ipCountries = ipAddrs.flatMapWith(_ => IpGeo(dbFile = SparkFiles.get(geoCityFile)))((pair, ipGeo) => {
@@ -71,27 +71,26 @@ object GeoIpExample {
         // ipAddr row tuple2 (1.179.147.2, [1385.0 248.997]), call to ipGeo(x.x.x.x) rets ipGeo object.
         ipGeo.getLocation(pair._1).map(
           c =>  // map ipAddr to ipGeo.countryCode
-            (pair._1, c.countryCode)).toSeq
+            (pair._1, c.countryCode)).toSeq  // toSequence of each row.
       })
     ipCountries.cache()  // (ipAddr._1, countryCode)
-    logger.info("ipCountries is " + ipCountries.foreach(println))
 
     // send computation partition to each node, and collect full knowledge back.
     // collect ipCountries segments from each partition and and form a complete countries map and bcast to all.
     val countries = ipCountries.values.distinct().collect()
-    logger.info("countries values : " + countries)
+    logger.info("countries values : " + countries.deep.mkString("\n"))  // a set of distinct countryCode
     val countriesBc = sc.broadcast(countries)
 
-    // countriesSignal convert ipCountres (ipAddr, code) to (ipAddr, 0/1)
+    // countriesSignal convert ipCountres (ipAddr, code) to (ipAddr, [0 0 1 0 0 ...])
+    // for each ip country, map to a list of n, n is num of all countries.
     val countriesSignal = ipCountries.mapValues(
-      // if ipCountries(ipAddr, code) not in countriesBc, emit 0.
-      country =>  // mapValues(), if row of ipCountries in countriesBc, emit 1.
-        countriesBc.value.map(
-          s => if (country == s) 1.
+      countryCode =>
+        countriesBc.value.map(  // transform countryCode => [0 1 0 0]
+          s => if (countryCode == s) 1.
                else 0.
         )
     )
-    // (1.179.147.2 [1385.0 248.997])
+    // (ipAddr, Seq([delays], [0 0 1 0 0 ...])) => DataPoint([[delays+xx], zz])
     val dataPoints = ipAddrs.join(countriesSignal).map(
       input => {
         input._2 match {
