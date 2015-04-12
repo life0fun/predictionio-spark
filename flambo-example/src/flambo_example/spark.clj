@@ -25,15 +25,13 @@
 
 
 ;; Get the data into Spark
-
-(def tweets (cheshire.core/parse-string (slurp "data/tweets.json") true))
+(def tweets (cheshire.core/parse-string (slurp "resources/tweets.json") true))
 (def data (f/parallelize sc tweets))
 
 
 
 ;; Duckboard helper
 ;; ================
-
 (defn duck-push [widget-id data]
     "Duck board helper"
     (client/post (clojure.string/join ["https://push.ducksboard.com/v/" widget-id])
@@ -46,19 +44,18 @@
 ;;                    ])
 
 
-
-;; Refinery Functions
-;; ==================
-
+; extract re-exp matched group.
 (defn extract-group [n] (fn [group] (group n)))
-(def hourly-rate (f/fn [tweet]
-                       (read-string (first (map (extract-group 2) (re-seq #"(\$)([\d]+)(\/hr)" (:text tweet)))))))
-(def tags (f/fn [tweet]
-                (map clojure.string/lower-case (re-seq #"\#[\d\w\.]+" (:text tweet)))))
-(def parse-date (f/fn [tweet]
-                      (t/parse (t/formatter "E MMM dd HH:mm:ss Z YYYY") (:created_at tweet))))
-
-
+; hourly rate is reg-match group 2
+(def hourly-rate 
+  (f/fn [tweet]
+    (read-string (first (map (extract-group 2) (re-seq #"(\$)([\d]+)(\/hr)" (:text tweet)))))))
+(def tags 
+  (f/fn [tweet]
+    (map clojure.string/lower-case (re-seq #"\#[\d\w\.]+" (:text tweet)))))
+(def parse-date 
+  (f/fn [tweet]
+    (t/parse (t/formatter "E MMM dd HH:mm:ss Z YYYY") (:created_at tweet))))
 
 
 ;; Scratch pad to figure out data transformations
@@ -88,22 +85,21 @@
 ;;     (f/reduce min))
 
 
-
 (defn truncate-day [dt]
   "Helper to round up the datetime -> date"
-   (time/to-time-zone
-   (apply time/date-time
-          (map #(% dt) [time/year time/month time/day]))
-   (time/default-time-zone)))
+  (time/to-time-zone
+    (apply time/date-time (map #(% dt) [time/year time/month time/day]))
+    (time/default-time-zone)))
 
 
 
 ;; Insight #1 √
 ;; Display a sample of the data we have
 
-(def tweet-data (-> data
-                 (f/map (f/fn[x] {:timestamp (/ (tc/to-long (truncate-day (parse-date x))) 1000) :value {:content (:text x)}}))
-                 (f/take 30)))
+(def tweet-data 
+  (-> data
+    (f/map (f/fn[x] {:timestamp (/ (tc/to-long (truncate-day (parse-date x))) 1000) :value {:content (:text x)}}))
+    (f/take 30)))
 
 (map (partial duck-push 541705) tweet-data)
 
