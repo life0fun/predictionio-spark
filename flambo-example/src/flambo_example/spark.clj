@@ -4,7 +4,7 @@
              [cheshire.core :refer :all]
              [clj-time.core :as time]
              [clj-time.coerce :as tc]
-             [clj-time.format :as t]
+             [clj-time.format :as tf]
              [clj-http.client :as client]
              [environ.core :refer [env]]
              [clojure.java.browse])
@@ -29,7 +29,6 @@
 (def data (f/parallelize sc tweets))
 
 
-
 ;; Duckboard helper
 ;; ================
 (defn duck-push [widget-id data]
@@ -46,16 +45,21 @@
 
 ; extract re-exp matched group.
 (defn extract-group [n] (fn [group] (group n)))
+
 ; hourly rate is reg-match group 2
 (def hourly-rate 
   (f/fn [tweet]
     (read-string (first (map (extract-group 2) (re-seq #"(\$)([\d]+)(\/hr)" (:text tweet)))))))
-(def tags 
+
+; tags starts with hashtag #
+(def tags
   (f/fn [tweet]
     (map clojure.string/lower-case (re-seq #"\#[\d\w\.]+" (:text tweet)))))
-(def parse-date 
+
+; ret a DateTime instance in the UTC time zone obtained by parsing
+(def parse-date
   (f/fn [tweet]
-    (t/parse (t/formatter "E MMM dd HH:mm:ss Z YYYY") (:created_at tweet))))
+    (tf/parse (tf/formatter "E MMM dd HH:mm:ss Z YYYY") (:created_at tweet))))
 
 
 ;; Scratch pad to figure out data transformations
@@ -85,17 +89,15 @@
 ;;     (f/reduce min))
 
 
-(defn truncate-day [dt]
+(defn truncate-day
   "Helper to round up the datetime -> date"
+  [dt]  ; Datetime instance, get year, month, day, round up to date in local timezone.
   (time/to-time-zone
     (apply time/date-time (map #(% dt) [time/year time/month time/day]))
     (time/default-time-zone)))
 
 
-
-;; Insight #1 √
-;; Display a sample of the data we have
-
+; from parallized tweets, ret objs with tweets text and timestamp set to day's utc long in seconds.
 (def tweet-data 
   (-> data
     (f/map (f/fn[x] {:timestamp (/ (tc/to-long (truncate-day (parse-date x))) 1000) :value {:content (:text x)}}))
@@ -104,19 +106,16 @@
 (map (partial duck-push 541705) tweet-data)
 
 
+; transform tweets in this partition by filtering rate, and parse Datetime instance and hour rate.
+(def tag-data-rdd 
+  (-> data
+    (f/filter (f/fn[x] ((comp not nil?) (re-find #"(\$)([\d]+)(\/hr)" (:text x))))) ;; make sure we filter tweets that include a dollar amount
+    (f/map (f/fn[x] {:created_at (parse-date x)
+                     :tags (vec (tags x))
+                     :rate (hourly-rate x)}))))
 
 
-;; Insight #2 √
-;; Basics
-
-(def tag-data-rdd (-> data
-                 (f/filter (f/fn[x]((comp not nil?) (re-find #"(\$)([\d]+)(\/hr)" (:text x))))) ;; make sure we filter tweets that include a dollar amount
-                 (f/map (f/fn[x] {:created_at (parse-date x)
-                                  :tags (vec (tags x))
-                                  :rate (hourly-rate x)}))))
-
-
-;; Show how many records we harvested
+;; Show how many records we harvested, count is RDD action, ret a value to the driver program.
 (duck-push 541698 {:value (f/count tag-data-rdd)})
 
 ;; Find out the highest rate offered
@@ -124,7 +123,10 @@
                                 (f/map :rate)
                                  (f/reduce max))})
 
-(-> tag-data-rdd (f/map :rate) (f/reduce max))
+; find the max rate of each rdd
+(-> tag-data-rdd 
+  (f/map :rate)
+  (f/reduce max))
 
 
 ;; Find out the lowest rate offered
@@ -139,38 +141,30 @@
 ;                                 (stats/mean))})
 
 
-
-
-;; Insight #3 √
-;; Load up the volume of postings we have over time
-;; Widget-id: 540863
-
-
+; transform data with timestamp by day, then count by value(day's timestamp)
 (def tag-data-serie
-   "Transform data into time serie with volume per day"
-              (-> data
-                 (f/filter (f/fn[x]((comp not nil?) (re-find #"(\$)([\d]+)(\/hr)" (:text x))))) ;; make sure we filter tweets that include a dollar amount
-                  (f/map (f/fn[x] {:timestamp (/ (tc/to-long (truncate-day (parse-date x))) 1000)}))
-                  (f/count-by-value)
-                 ))
-
+  "Transform data into time serie with volume per day using count-by-value"
+  (-> data
+    (f/filter (f/fn[x] ((comp not nil?) (re-find #"(\$)([\d]+)(\/hr)" (:text x))))) ;; make sure we filter tweets that include a dollar amount
+    (f/map (f/fn[x] {:timestamp (/ (tc/to-long (truncate-day (parse-date x))) 1000)}))
+    (f/count-by-value)
+  ))
 
 (duck-push 540898 (map (fn[e] (into (first e) {:value (last e)})) tag-data-serie))
 
 
-
-
 ;; Insight #4 √
 ;; Leaderboard of the top skills
-;; Widget-id: 541608
+; for each taged skill, maps to skill/rate pair.
+(def tag-data 
+  (-> tag-data-rdd
+    (f/flat-map (f/fn[x] (partition 2 (interleave (:tags x) (repeat (:rate x))))))))
 
-(def tag-data (-> tag-data-rdd
-                 (f/flat-map (f/fn[x] (partition 2 (interleave (:tags x) (repeat (:rate x))))))))
-
-
-(def tag-data-count (-> tag-data
-                       (f/count-by-key)
-                       (#(sort-by val > %))))
+; tag-data from above, key is skill/tag.
+(def tag-data-count 
+  (-> tag-data
+    (f/count-by-key)
+    (#(sort-by val > %))))
 
 
 (duck-push 541608 {:value {:board (map (fn[e]{:name (first e) :values [(last e)]}) tag-data-count)}})
