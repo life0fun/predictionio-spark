@@ -26,6 +26,7 @@
 
 ;; Get the data into Spark
 (def tweets (cheshire.core/parse-string (slurp "resources/tweets.json") true))
+; ddata is tweets RDD
 (def data (f/parallelize sc tweets))
 
 
@@ -106,7 +107,7 @@
 (map (partial duck-push 541705) tweet-data)
 
 
-; transform tweets in this partition by filtering rate, and parse Datetime instance and hour rate.
+; transform tweets in this partition to [tag rate] tuples by filtering rate, and parse Datetime instance and hour rate.
 (def tag-data-rdd 
   (-> data
     (f/filter (f/fn[x] ((comp not nil?) (re-find #"(\$)([\d]+)(\/hr)" (:text x))))) ;; make sure we filter tweets that include a dollar amount
@@ -155,12 +156,13 @@
 
 ;; Insight #4 √
 ;; Leaderboard of the top skills
-; for each taged skill, maps to skill/rate pair.
+; for each taged skill, maps to skill/rate pair. [[c $10] [java $10] ...]
 (def tag-data 
   (-> tag-data-rdd
     (f/flat-map (f/fn[x] (partition 2 (interleave (:tags x) (repeat (:rate x))))))))
 
-; tag-data from above, key is skill/tag.
+
+; for [skill/tag rate] tuples, count by key, [key, cnt], then sort to see which skill/tags hot.
 (def tag-data-count 
   (-> tag-data
     (f/count-by-key)
