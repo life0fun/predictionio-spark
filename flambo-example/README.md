@@ -1,10 +1,14 @@
 # flambo-example
 
-A Clojure library designed to ... well, that part is up to you.
+A Clojure library demonstrate how to use flambo.
 
 ## Usage
 
-FIXME
+Run the few manipulations:
+
+```
+lein run
+```
 
 ## License
 

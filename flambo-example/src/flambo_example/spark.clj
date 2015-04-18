@@ -18,10 +18,9 @@
 ;; Spark setup
 (def c (-> (conf/spark-conf)
            (conf/master "local[*]")
-           (conf/app-name "airpair_harvest")))
+           (conf/app-name "flambo-example")))
 
 (def sc (f/spark-context c))
-
 
 
 ;; Get the data into Spark
@@ -104,7 +103,7 @@
     (f/map (f/fn[x] {:timestamp (/ (tc/to-long (truncate-day (parse-date x))) 1000) :value {:content (:text x)}}))
     (f/take 30)))
 
-(map (partial duck-push 541705) tweet-data)
+; (map (partial duck-push 541705) tweet-data)
 
 
 ; transform tweets in this partition to [tag rate] tuples by filtering rate, and parse Datetime instance and hour rate.
@@ -117,12 +116,12 @@
 
 
 ;; Show how many records we harvested, count is RDD action, ret a value to the driver program.
-(duck-push 541698 {:value (f/count tag-data-rdd)})
+; (duck-push 541698 {:value (f/count tag-data-rdd)})
 
 ;; Find out the highest rate offered
-(duck-push 541699 {:value (-> tag-data-rdd
-                                (f/map :rate)
-                                 (f/reduce max))})
+; (duck-push 541699 {:value (-> tag-data-rdd
+;                                 (f/map :rate)
+;                                  (f/reduce max))})
 
 ; find the max rate of each rdd
 (-> tag-data-rdd 
@@ -131,9 +130,9 @@
 
 
 ;; Find out the lowest rate offered
-(duck-push 541700 {:value (-> tag-data-rdd
-                                (f/map :rate)
-                                 (f/reduce min))})
+; (duck-push 541700 {:value (-> tag-data-rdd
+;                                 (f/map :rate)
+;                                  (f/reduce min))})
 
 
 ; (duck-push 541701 {:value (-> tag-data-rdd
@@ -151,7 +150,7 @@
     (f/count-by-value)
   ))
 
-(duck-push 540898 (map (fn[e] (into (first e) {:value (last e)})) tag-data-serie))
+; (duck-push 540898 (map (fn[e] (into (first e) {:value (last e)})) tag-data-serie))
 
 
 ;; Insight #4 √
@@ -169,7 +168,7 @@
     (#(sort-by val > %))))
 
 
-(duck-push 541608 {:value {:board (map (fn[e]{:name (first e) :values [(last e)]}) tag-data-count)}})
+; (duck-push 541608 {:value {:board (map (fn[e]{:name (first e) :values [(last e)]}) tag-data-count)}})
 
 
 (defn -main[]

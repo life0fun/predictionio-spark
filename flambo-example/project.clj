@@ -15,7 +15,7 @@
     [environ "0.5.0"]                          ;; manage env variables
     ]
 
-  ; :main flambo-example.spark
+  :main flambo-example.spark              ;; lein run will execute main.
   :repl-options {:nrepl-middleware []}
   :aliases {"mine" ["run" "-m" "flambo-example.mine/-main"]}
   :profiles {:dev
