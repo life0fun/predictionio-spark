@@ -10,6 +10,16 @@ Run the few manipulations:
 lein run
 ```
 
+To run the app as standalone app, we need to package the app in an Uber jar.
+
+  spark-submit --verbose \
+    --jars target/uberjar.jar \
+    --master local[4] \
+    --class flambo-example.spark
+    target/uberjar.jar 
+    local[4] ip_delay.csv
+
+
 ## License
 
 Copyright © 2015 FIXME
