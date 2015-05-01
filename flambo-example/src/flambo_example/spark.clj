@@ -8,11 +8,15 @@
              [clj-http.client :as client]
              [environ.core :refer [env]]
              [clojure.java.browse])
-  (:import [org.apache.log4j Level Logger])
+  (:import ;[org.apache.log4j Level Logger]
+           [org.slf4j Logger LoggerFactory])
   (:gen-class))
 
 ;; We don't need to see everything
-;; (.setLevel (Logger/getRootLogger) Level/WARN)
+; (.setLevel (Logger/getRootLogger) Level/DEBUG)
+
+
+(def logger (LoggerFactory/getLogger "flambo-example"))
 
 
 ;; Spark setup
@@ -28,6 +32,10 @@
 ; ddata is tweets RDD
 (def data (f/parallelize sc tweets))
 
+
+(defn log
+  [msg]
+  (.info logger msg))
 
 ;; Duckboard helper
 ;; ================
@@ -105,6 +113,7 @@
 
 ; (map (partial duck-push 541705) tweet-data)
 
+(log (str " first tweet-data " (first tweet-data)))
 
 ; transform tweets in this partition to [tag rate] tuples by filtering rate, and parse Datetime instance and hour rate.
 (def tag-data-rdd 
