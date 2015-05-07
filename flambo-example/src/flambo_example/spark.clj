@@ -17,7 +17,7 @@
 
 
 (def logger (LoggerFactory/getLogger "flambo-example"))
-
+(defn log [msg] (.info logger msg))
 
 ;; Spark setup
 (def c (-> (conf/spark-conf)
@@ -29,13 +29,10 @@
 
 ;; Get the data into Spark
 (def tweets (cheshire.core/parse-string (slurp "resources/tweets.json") true))
-; ddata is tweets RDD
+
+; convert tweets into RDD
 (def data (f/parallelize sc tweets))
 
-
-(defn log
-  [msg]
-  (.info logger msg))
 
 ;; Duckboard helper
 ;; ================
@@ -51,13 +48,16 @@
 ;;                    ])
 
 
-; extract re-exp matched group.
-(defn extract-group [n] (fn [group] (group n)))
+; extract re-exp matched group for each tween RDD tuple.
+(defn extract-group [n] 
+  (fn [group] (group n)))
+
 
 ; hourly rate is reg-match group 2
 (def hourly-rate 
   (f/fn [tweet]
-    (read-string (first (map (extract-group 2) (re-seq #"(\$)([\d]+)(\/hr)" (:text tweet)))))))
+    (read-string (first (map (extract-group 2) 
+                             (re-seq #"(\$)([\d]+)(\/hr)" (:text tweet)))))))
 
 ; tags starts with hashtag #
 (def tags
@@ -106,9 +106,10 @@
 
 
 ; from parallized tweets, ret objs with tweets text and timestamp set to day's utc long in seconds.
+; for each RDD tuple, transform to a json with timestamp and value.
 (def tweet-data 
   (-> data
-    (f/map (f/fn[x] {:timestamp (/ (tc/to-long (truncate-day (parse-date x))) 1000) :value {:content (:text x)}}))
+    (f/map (f/fn [x] {:timestamp (/ (tc/to-long (truncate-day (parse-date x))) 1000) :value {:content (:text x)}}))
     (f/take 30)))
 
 ; (map (partial duck-push 541705) tweet-data)
@@ -118,10 +119,10 @@
 ; transform tweets in this partition to [tag rate] tuples by filtering rate, and parse Datetime instance and hour rate.
 (def tag-data-rdd 
   (-> data
-    (f/filter (f/fn[x] ((comp not nil?) (re-find #"(\$)([\d]+)(\/hr)" (:text x))))) ;; make sure we filter tweets that include a dollar amount
-    (f/map (f/fn[x] {:created_at (parse-date x)
-                     :tags (vec (tags x))
-                     :rate (hourly-rate x)}))))
+    (f/filter (f/fn [x] ((comp not nil?) (re-find #"(\$)([\d]+)(\/hr)" (:text x))))) ;; make sure we filter tweets that include a dollar amount
+    (f/map (f/fn [x] {:created_at (parse-date x)
+                      :tags (vec (tags x))
+                      :rate (hourly-rate x)}))))
 
 
 ;; Show how many records we harvested, count is RDD action, ret a value to the driver program.
@@ -154,8 +155,8 @@
 (def tag-data-serie
   "Transform data into time serie with volume per day using count-by-value"
   (-> data
-    (f/filter (f/fn[x] ((comp not nil?) (re-find #"(\$)([\d]+)(\/hr)" (:text x))))) ;; make sure we filter tweets that include a dollar amount
-    (f/map (f/fn[x] {:timestamp (/ (tc/to-long (truncate-day (parse-date x))) 1000)}))
+    (f/filter (f/fn [x] ((comp not nil?) (re-find #"(\$)([\d]+)(\/hr)" (:text x))))) ;; make sure we filter tweets that include a dollar amount
+    (f/map (f/fn [x] {:timestamp (/ (tc/to-long (truncate-day (parse-date x))) 1000)}))
     (f/count-by-value)
   ))
 
@@ -167,7 +168,7 @@
 ; for each taged skill, maps to skill/rate pair. [[c $10] [java $10] ...]
 (def tag-data 
   (-> tag-data-rdd
-    (f/flat-map (f/fn[x] (partition 2 (interleave (:tags x) (repeat (:rate x))))))))
+    (f/flat-map (f/fn [x] (partition 2 (interleave (:tags x) (repeat (:rate x))))))))
 
 
 ; for [skill/tag rate] tuples, count by key, [key, cnt], then sort to see which skill/tags hot.
@@ -180,5 +181,5 @@
 ; (duck-push 541608 {:value {:board (map (fn[e]{:name (first e) :values [(last e)]}) tag-data-count)}})
 
 
-(defn -main[]
+(defn -main []
   (clojure.java.browse/browse-url "https://public.ducksboard.com/J1YLJIHjy7KU7SNOqIzm"))

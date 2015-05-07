@@ -8,8 +8,7 @@
              [clj-http.client :as client]
              [environ.core :refer [env]]
              [clojure.java.browse])
-  (:import ;[org.apache.log4j Level Logger]
-           [org.slf4j Logger LoggerFactory])
+  (:import [org.slf4j Logger LoggerFactory])
   (:gen-class))
 
 
@@ -19,18 +18,17 @@
 ; idf(t) = ln((total number of documents in corpus) / (1 + (number of documents with term t)))
 
 
-(def logger (LoggerFactory/getLogger "flambo-example"))
+(def logger (LoggerFactory/getLogger "flambo-tfidf"))
 
 
 ;; Spark setup
 (def c (-> (conf/spark-conf)
            (conf/master "local[*]")
-           (conf/app-name "flambo-example")))
+           (conf/app-name "flambo-tfidf")))
 
 (def sc (f/spark-context c))
 
-(defn log
-  [msg]
+(defn log [msg]
   (.info logger msg))
 
 
@@ -42,15 +40,18 @@
 
 (def doc-data (f/parallelize sc documents))
 
-(f/defsparkfn gen-docid-term-tuples [doc-tuple]
-         (let [[doc-id content] doc-tuple
-               terms (filter #(not (contains? stopwords %))
-                             (clojure.string/split content #" "))
-               doc-terms-count (count terms)
-               term-frequencies (frequencies terms)]
-           (map (fn [term] [doc-id term (term-frequencies term) doc-terms-count])
-                (distinct terms))))
-user=> (def doc-term-seq (-> doc-data
+; def spark fn to be used within spark map/reduce fn.
+(f/defsparkfn gen-docid-term-tuples 
+  [doc-tuple]
+  (let [[doc-id content] doc-tuple
+        terms (filter #(not (contains? stopwords %))
+                      (clojure.string/split content #" "))
+        doc-terms-count (count terms)
+        term-frequencies (frequencies terms)]
+    (map (fn [term] [doc-id term (term-frequencies term) doc-terms-count])
+        (distinct terms))))
+
+(def doc-term-seq (-> doc-data
                              (f/flat-map gen-docid-term-tuples)
                              f/cache))
 
