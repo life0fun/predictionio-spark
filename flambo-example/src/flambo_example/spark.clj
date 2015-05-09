@@ -105,8 +105,7 @@
     (time/default-time-zone)))
 
 
-; from parallized tweets, ret objs with tweets text and timestamp set to day's utc long in seconds.
-; for each RDD tuple, transform to a json with timestamp and value.
+; for each dataRDD tuple, transform to {:ts :value} map with ts day's utc long in seconds.
 (def tweet-data 
   (-> data
     (f/map (f/fn [x] {:timestamp (/ (tc/to-long (truncate-day (parse-date x))) 1000) :value {:content (:text x)}}))
