@@ -106,14 +106,16 @@
 
 
 ; for each dataRDD tuple, transform to {:ts :value} map with ts day's utc long in seconds.
+; f/take will ret an java.util.ArrayList from RDD
 (def tweet-data 
   (-> data
     (f/map (f/fn [x] {:timestamp (/ (tc/to-long (truncate-day (parse-date x))) 1000) :value {:content (:text x)}}))
-    (f/take 30)))
+    (f/take 30)))  ; take ret java ArrayList
 
 ; (map (partial duck-push 541705) tweet-data)
 
-(log (str " first tweet-data " (first tweet-data)))
+; log format: flambo-example: {:timestamp 1415577600, :value {:content "Get paid $110/hr to help..."}}
+(log (str "first tweet-data " (first tweet-data)))
 
 ; transform tweets in this partition to [tag rate] tuples by filtering rate, and parse Datetime instance and hour rate.
 (def tag-data-rdd 
@@ -164,11 +166,15 @@
 
 ;; Insight #4 √
 ;; Leaderboard of the top skills
+; all skills of one person got the same rate.
 ; for each taged skill, maps to skill/rate pair. [[c $10] [java $10] ...]
 (def tag-data 
   (-> tag-data-rdd
-    (f/flat-map (f/fn [x] (partition 2 (interleave (:tags x) (repeat (:rate x))))))))
+    (f/flat-map (f/fn [x] (partition 2 (interleave (:tags x) (repeat (:rate x))))))
+    (f/map-to-pair (f/fn [x] x))
+    ))
 
+(log (str "first tag-data " (f/first tag-data)))
 
 ; for [skill/tag rate] tuples, count by key, [key, cnt], then sort to see which skill/tags hot.
 (def tag-data-count 
