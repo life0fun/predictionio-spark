@@ -1,5 +1,6 @@
 (ns flambo-example.spark
   (:require  [flambo.api :as f]
+             [flambo.tuple :as ft]
              [flambo.conf :as conf]
              [cheshire.core :refer :all]
              [clj-time.core :as time]
@@ -171,20 +172,20 @@
 (def tag-data 
   (-> tag-data-rdd
     (f/flat-map (f/fn [x] (partition 2 (interleave (:tags x) (repeat (:rate x))))))
-    (f/map-to-pair (f/fn [x] x))
+    (f/map-to-pair (f/fn [[x y]] (ft/tuple x y)))
     ))
 
 (log (str "first tag-data " (f/first tag-data)))
 
 ; for [skill/tag rate] tuples, count by key, [key, cnt], then sort to see which skill/tags hot.
-(def tag-data-count 
+(def tag-data-count
   (-> tag-data
     (f/count-by-key)
     (#(sort-by val > %))))
 
+(log (str "tag-data-count " tag-data-count))
 
 ; (duck-push 541608 {:value {:board (map (fn[e]{:name (first e) :values [(last e)]}) tag-data-count)}})
 
-
 (defn -main []
-  (clojure.java.browse/browse-url "https://public.ducksboard.com/J1YLJIHjy7KU7SNOqIzm"))
+  (clojure.java.browse/browse-url "https://public.ducksboard.com/"))

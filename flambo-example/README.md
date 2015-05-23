@@ -45,9 +45,25 @@ Spark’s API relies heavily on passing functions in the driver program to run o
       f/collect
       clojure.pprint/pprint)
 
+## Key-Value Pair RDD of (key, value) tuples Operation
+
+In flambo, these operations are available on RDDs of (key, value) tuples.
+Flambo handles all of the transformations/serializations to/from Tuple, Tuple2, JavaRDD, JavaPairRDD, etc., so you only need to define the sequence of operations you'd like to perform on your data.
+
+  (f/reduce-by-key ft/tuple w 1))
+  (f/combine-by-key ...)
+  (f/sort-by-key ...)
+  (f/group-by-key ...)
+  (f/count-by-key ...)
+
+Tuple functions:
+  key-val-fn: destruct tuples into (k,v) and call the supplied fn with those args.
+  key-val-val-fn: destruct (K, (Tuple2(V1, V2)) and call fn with k, v1, v2.
+  
+
 ## License
 
-Copyright © 2015 FIXME
+Copyright © 2015
 
 Distributed under the Eclipse Public License either version 1.0 or (at
 your option) any later version.
