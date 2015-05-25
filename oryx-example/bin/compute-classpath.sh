@@ -15,8 +15,10 @@
 
 # CDH5.3+ specific classpath config
 
-HADOOP_CONF_DIR="/etc/hadoop/conf"
-CDH_JARS_DIR="/opt/cloudera/parcels/CDH/jars"
+#HADOOP_CONF_DIR="/etc/hadoop/conf"
+#CDH_JARS_DIR="/opt/cloudera/parcels/CDH/jars"
+HADOOP_CONF_DIR="/Users/hyan2/dev/cloudera/hadoop/etc/hadoop/"
+CDH_JARS_DIR="/Users/hyan2/dev/cloudera/jars/"
 
 # Some are known to have multiple versions, and so are fully specified:
 

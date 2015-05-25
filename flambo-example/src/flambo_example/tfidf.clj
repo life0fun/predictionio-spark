@@ -30,9 +30,10 @@
     ["doc4" "conceived and so dedicated can long endure We are met on a great battlefield of that war"]])
 
 ;; Spark setup
-(def c (-> (conf/spark-conf)
-           (conf/master "local[*]")
-           (conf/app-name "flambo-tfidf")))
+(def c 
+  (-> (conf/spark-conf)
+    (conf/master "local[*]")
+    (conf/app-name "flambo-tfidf")))
 
 (def sc (f/spark-context c))
 
@@ -54,18 +55,21 @@
 
 
 ; RDD [doc-id term term-freq doc-terms-count]
-(def doc-term-seq (-> doc-data
-                    (f/flat-map gen-docid-term-tuples)
-                    f/cache))
+(def doc-term-seq 
+  (-> doc-data
+    (f/flat-map gen-docid-term-tuples)
+    f/cache))
 
 
 ; RDD [term [doc-id (/ term-freq doc-terms-count)]]
-(def tf-by-doc (-> doc-term-seq
-                  (f/map (f/fn [[doc-id term term-freq doc-terms-count]]
-                                [term [doc-id (double (/ term-freq doc-terms-count))]]))
-                  f/cache)
+(def tf-by-doc
+  (-> doc-term-seq
+    (f/map (f/fn [[doc-id term term-freq doc-terms-count]]
+                  [term [doc-id (double (/ term-freq doc-terms-count))]]))
+    f/cache)
 
-(def num-docs (f/count doc-data))
+(def num-docs
+  (f/count doc-data))
 
 ; creat a fn to count grouped tuple of [term [tuple1 tuple2]]
 ; emit [term count] RDD
@@ -75,7 +79,7 @@
     (let [df (count tuple-seq)]
       [term (Math/log (/ doc-count (+ 1.0 df)))])))
 
-user=> (def idf-by-term (-> doc-term-seq
+(def idf-by-term (-> doc-term-seq
                             (f/group-by (f/fn [[_ term _ _]] term))
                             (f/map (calc-idf num-docs))
                             f/cache)

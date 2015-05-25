@@ -57,6 +57,7 @@ Flambo handles all of the transformations/serializations to/from Tuple, Tuple2, 
   (f/count-by-key ...)
 
 Tuple functions:
+
   key-val-fn: destruct tuples into (k,v) and call the supplied fn with those args.
   key-val-val-fn: destruct (K, (Tuple2(V1, V2)) and call fn with k, v1, v2.
   
