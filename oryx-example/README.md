@@ -19,6 +19,12 @@
 
     export PATH=${HADOOP_HOME}/bin:${HADOOP_HOME}/sbin:${ZK_HOME}/bin:${HBASE_HOME}/bin:${HIVE_HOME}/bin:${HCAT_HOME}/bin:${M2_HOME}/bin:${ANT_HOME}/bin:${PATH}
 
+  Ensure version and classpath set properly.
+
+    hadoop version
+    hadoop classpath
+
+    export HADOOP_CLASSPATH=”./:/usr/lib/hbase/hbase-0.94.6.1.3.0.0-107-security.jar:`hadoop classpath`”;
 
 ## Ensure services are running
   First, make sure `hadoop version` is Hadoop 2.6.0-cdh5.4.1
@@ -69,6 +75,8 @@
   
   hadoop jar mapreduce example.
       hadoop jar ./share/hadoop/mapreduce2/hadoop-mapreduce-examples-2.6.0-cdh5.4.1.jar pi 2 5
+  yarn mapreduce example.
+      yarn jar ./share/hadoop/mapreduce2/hadoop-mapreduce-examples-2.6.0-cdh5.4.1.jar pi 1 1
 
   ### hbase
       start-hbase.sh
@@ -85,15 +93,23 @@
 
 ## Run oryx
   
-  1. create bin/ folder contains run.sh and compute-clsasspath.sh.
-    set the correct hadoop and cdh jar path.
+1. create bin/ folder contains run.sh and compute-clsasspath.sh.
+  set the correct hadoop and cdh jar path. Need to provide kafka jar with kafka_*.jar so compute-classpath.sh can grep it.
 
-  2. Create a configuration file for your application. You may start with the example in conf/als-example.conf. Modify host names, ports and directories. In particular, choose data and model directories on HDFS that exist and will be accessible to the user running Oryx binaries.
+2. create subdirectories for batch/serving/speed layer. Note can not have oryx- prefix as run.sh 
 
-go to bin/ directory, Run the three Layers with:
+3. Create a configuration file for the app, specify host names, ports and directories. In particular, choose data and model directories on HDFS that exist and will be accessible to the user running Oryx binaries.
 
-    ./run.sh --layer-jar oryx-batch-2.0.0-SNAPSHOT.jar --conf example.conf
+4. specify SPARK_CONF_DIR and point to where spark-env.sh.
+change oryx app conf to reduce batch streaming executor memory from 4g to 400m.
+  
+    executor-memory = "400m"
 
-    ./run.sh --layer-jar oryx-speed-2.0.0-SNAPSHOT.jar --conf example.conf
 
-    ./run.sh --layer-jar oryx-serving-2.0.0-SNAPSHOT.jar --conf example.conf
+3. go to bin/ directory, Run the three Layers with:
+
+  ./run.sh --layer-jar ../batch/target/oryx-batch-2.0.0-SNAPSHOT.jar --conf ../example.conf 
+
+  ./run.sh --layer-jar oryx-speed-2.0.0-SNAPSHOT.jar --conf example.conf
+
+  ./run.sh --layer-jar oryx-serving-2.0.0-SNAPSHOT.jar --conf example.conf

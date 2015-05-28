@@ -20,13 +20,15 @@
 HADOOP_CONF_DIR="/Users/hyan2/dev/cloudera/hadoop/etc/hadoop/"
 CDH_JARS_DIR="/Users/hyan2/dev/cloudera/jars/"
 
+SPARK_CONF_DIR="/Users/hyan2/dev/cloudera/spark/etc/spark"
+
 # Some are known to have multiple versions, and so are fully specified:
 
 echo ${HADOOP_CONF_DIR}
+echo ${SPARK_CONF_DIR}
 ls -1 \
  ${CDH_JARS_DIR}/zookeeper-*.jar \
  ${CDH_JARS_DIR}/spark-assembly-*.jar \
- ${CDH_JARS_DIR}/spark-examples-*.jar \
  ${CDH_JARS_DIR}/hadoop-auth-*.jar \
  ${CDH_JARS_DIR}/hadoop-common-*.jar \
  ${CDH_JARS_DIR}/hadoop-hdfs-*.jar \
@@ -38,8 +40,10 @@ ls -1 \
  ${CDH_JARS_DIR}/hadoop-yarn-applications-distributedshell-*.jar \
  ${CDH_JARS_DIR}/commons-cli-1.2.jar \
  ${CDH_JARS_DIR}/commons-collections-*.jar \
- ${CDH_JARS_DIR}/commons-configuration-1.7.jar \
+ ${CDH_JARS_DIR}/commons-configuration-*.jar \
  ${CDH_JARS_DIR}/commons-lang-2.6.jar \
  ${CDH_JARS_DIR}/protobuf-java-*.jar \
- ${CDH_JARS_DIR}/snappy-java-1.0.5.jar \
+ ${CDH_JARS_DIR}/kafka_*.jar \
+ ${CDH_JARS_DIR}/snappy-java-*.jar \
+ ${CDH_JARS_DIR}/htrace-core-*.jar \
  | grep -E "[0-9]\\.jar$"

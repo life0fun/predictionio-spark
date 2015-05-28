@@ -21,6 +21,10 @@ To read from kafka from a Spark Streaming job, use KafkaUtils.createDirectStream
 
 ## Create Direct Stream
 
+For spark stream to connect to kafka topic, we need specify kafkaParams with matadata. For producer, broker list, for consuer, zookeepr.
+    
+    metadata.broker.list
+
 To read from Kafka inside stream job, createDirectStream and foreachRDD.
 
   import org.apache.spark.streaming.kafka._
