@@ -9,7 +9,7 @@ To read from kafka from a Spark Streaming job, use KafkaUtils.createDirectStream
 
     git clone 
     rm -fr /tmp/zookeeper* && rm -fr /tmp/kafka-log*
-
+  start zookeeper and kafka broker
     bin/zookeeper-server-start.sh config/zookeeper.properties
     bin/kafka-server-start.sh config/server.properties
 

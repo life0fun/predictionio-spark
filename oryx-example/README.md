@@ -21,10 +21,24 @@
 
   Ensure version and classpath set properly.
 
+    http://blog.cloudera.com/blog/2011/01/how-to-include-third-party-libraries-in-your-map-reduce-job/
+
+    use -libjars” command line option of the hadoop jar ... command. 
+    The jar will be placed in distributed cache and will be available to all of the job’s task.
+    ${mapred.local.dir}/taskTracker/archive/${user.name}/distcache/… subdirectories on local nodes
+
+    job.addFileToClassPath(new Path("pathToJar")); 
+
     hadoop version
     hadoop classpath
 
+  All sorts of env variables for classpath.
+    exportHADOOP_HOME=/Users/hyan2/dev/cloudera/hadoop
     export HADOOP_CLASSPATH=”./:/usr/lib/hbase/hbase-0.94.6.1.3.0.0-107-security.jar:`hadoop classpath`”;
+    CLASSPATH=$CLASSPATH:$HADOOP_HOME/lib/hadoop-lzo.jar
+    export JAVA_LIBRARY_PATH=$JAVA_LIBRARY_PATH:$HADOOP_HOME/lib/native/
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HADOOP_HOME/lib/native/
+
 
 ## Ensure services are running
   First, make sure `hadoop version` is Hadoop 2.6.0-cdh5.4.1
@@ -91,6 +105,8 @@
        
       scan 'URL_HITS'
 
+## Start kafka and zookeeper
+
 ## Run oryx
   
 1. create bin/ folder contains run.sh and compute-clsasspath.sh.
@@ -101,9 +117,12 @@
 3. Create a configuration file for the app, specify host names, ports and directories. In particular, choose data and model directories on HDFS that exist and will be accessible to the user running Oryx binaries.
 
 4. specify SPARK_CONF_DIR and point to where spark-env.sh.
-change oryx app conf to reduce batch streaming executor memory from 4g to 400m.
-  
+
+5. modify oryx app conf file to reduce batch streaming executor mem and cores.
     executor-memory = "400m"
+    executor-cores = 2
+    num-executors = 2
+
 
 
 3. go to bin/ directory, Run the three Layers with:
