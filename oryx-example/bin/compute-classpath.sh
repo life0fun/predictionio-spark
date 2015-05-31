@@ -28,7 +28,9 @@ echo ${HADOOP_CONF_DIR}
 echo ${SPARK_CONF_DIR}
 ls -1 \
  ${CDH_JARS_DIR}/zookeeper-*.jar \
+ ${CDH_JARS_DIR}/zkclient-*.jar \
  ${CDH_JARS_DIR}/spark-assembly-*.jar \
+ ${CDH_JARS_DIR}/spark-streaming-kafka-assembly_*.jar \
  ${CDH_JARS_DIR}/hadoop-auth-*.jar \
  ${CDH_JARS_DIR}/hadoop-common-*.jar \
  ${CDH_JARS_DIR}/hadoop-hdfs-*.jar \

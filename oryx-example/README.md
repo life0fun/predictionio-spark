@@ -7,9 +7,13 @@
   
   http://www.cloudera.com/content/cloudera/en/documentation/core/latest/topics/cdh_vd_cdh_package_tarball.html
 
+  https://repository.cloudera.com/content/repositories/cdh-releases-rcs/org/apache/spark/spark-streaming-kafka-assembly_2.10/1.3.0-cdh5.4.1/
+
   We install cloudera cdh jars under 
     ~dev/cloudera/hadoop,hbase.
     ~/dev/cloudera/hadoop/etc/hadoop
+
+  Download needed jars from repository.cloudera cdh-releases-rcs.
 
   We config running HBase in distributed or standalone mode to avoid download zookeeper. set hbase-site.xml/hbase.cluster.distributed to true/false.
   If distriuted, set HBASE_MANAGES_ZK in hbase-env.sh to tell hbase it should manage its own zk.
@@ -111,6 +115,7 @@
   
 1. create bin/ folder contains run.sh and compute-clsasspath.sh.
   set the correct hadoop and cdh jar path. Need to provide kafka jar with kafka_*.jar so compute-classpath.sh can grep it.
+  add missing jars, zkclient, spark-streaming-kafka_*, etc.
 
 2. create subdirectories for batch/serving/speed layer. Note can not have oryx- prefix as run.sh 
 
@@ -122,7 +127,6 @@
     executor-memory = "400m"
     executor-cores = 2
     num-executors = 2
-
 
 
 3. go to bin/ directory, Run the three Layers with:
