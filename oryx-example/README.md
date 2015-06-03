@@ -1,5 +1,9 @@
 # Oryx 2 example
 
+## Build Oryx
+
+    mvn -X -DskipTests --settings ~/.m2/default-settings.xml clean package
+
 ## Install cdh on mac
 
   http://blog.cloudera.com/blog/2014/09/how-to-install-cdh-on-mac-osx-10-9-mavericks/
@@ -128,6 +132,9 @@
     executor-cores = 2
     num-executors = 2
 
+
+6. Kafka setup
+    ./oryx-run.sh kafka-setup
 
 3. go to bin/ directory, Run the three Layers with:
 

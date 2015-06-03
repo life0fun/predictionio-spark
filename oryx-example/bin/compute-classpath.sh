@@ -13,7 +13,7 @@
 # the specific language governing permissions and limitations under the
 # License.
 
-# CDH5.3+ specific classpath config
+# CDH5.4+ specific classpath config
 
 #HADOOP_CONF_DIR="/etc/hadoop/conf"
 #CDH_JARS_DIR="/opt/cloudera/parcels/CDH/jars"
@@ -24,7 +24,6 @@ SPARK_CONF_DIR="/Users/hyan2/dev/cloudera/spark/etc/spark"
 
 # Some are known to have multiple versions, and so are fully specified:
 
-echo ${HADOOP_CONF_DIR}
 echo ${SPARK_CONF_DIR}
 ls -1 \
  ${CDH_JARS_DIR}/zookeeper-*.jar \
