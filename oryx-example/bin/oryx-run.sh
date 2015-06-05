@@ -226,7 +226,7 @@ kafka-setup|kafka-tail|kafka-input)
 
   case "${COMMAND}" in
   kafka-setup)
-    ALL_TOPICS=`kafka-topics --list --zookeeper ${INPUT_ZK} 2>&1 | grep -vE "^mkdir: cannot create directory"`
+    ALL_TOPICS=`kafka-topics.sh --list --zookeeper ${INPUT_ZK} 2>&1 | grep -vE "^mkdir: cannot create directory"`
     echo "All available topics:"
     echo "${ALL_TOPICS}"
     echo
@@ -236,12 +236,12 @@ kafka-setup|kafka-tail|kafka-input)
       case "${CREATE}" in
         y|Y)
           echo "Creating topic ${INPUT_TOPIC}"
-          kafka-topics --zookeeper ${INPUT_ZK} --create --replication-factor 2 --partitions 1 --topic ${INPUT_TOPIC} 2>&1 | grep -vE "^mkdir: cannot create directory"
+          kafka-topics.sh --zookeeper ${INPUT_ZK} --create --replication-factor 2 --partitions 1 --topic ${INPUT_TOPIC} 2>&1 | grep -vE "^mkdir: cannot create directory"
           ;;
       esac
     fi
     echo "Status of topic ${INPUT_TOPIC}:"
-    kafka-topics --zookeeper ${INPUT_ZK} --describe --topic ${INPUT_TOPIC} 2>&1 | grep -vE "^mkdir: cannot create directory"
+    kafka-topics.sh --zookeeper ${INPUT_ZK} --describe --topic ${INPUT_TOPIC} 2>&1 | grep -vE "^mkdir: cannot create directory"
     echo
 
     if [ -z `echo "${ALL_TOPICS}" | grep ${UPDATE_TOPIC}` ]; then
@@ -249,13 +249,13 @@ kafka-setup|kafka-tail|kafka-input)
       case "${CREATE}" in
         y|Y)
           echo "Creating topic ${UPDATE_TOPIC}"
-          kafka-topics --zookeeper ${UPDATE_ZK} --create --replication-factor 2 --partitions 1 --topic ${UPDATE_TOPIC} 2>&1 | grep -vE "^mkdir: cannot create directory"
-          kafka-topics --zookeeper ${UPDATE_ZK} --alter --topic ${UPDATE_TOPIC} --config retention.ms=86400000 2>&1 | grep -vE "^mkdir: cannot create directory"
+          kafka-topics.sh --zookeeper ${UPDATE_ZK} --create --replication-factor 2 --partitions 1 --topic ${UPDATE_TOPIC} 2>&1 | grep -vE "^mkdir: cannot create directory"
+          kafka-topics.sh --zookeeper ${UPDATE_ZK} --alter --topic ${UPDATE_TOPIC} --config retention.ms=86400000 2>&1 | grep -vE "^mkdir: cannot create directory"
           ;;
       esac
     fi
     echo "Status of topic ${UPDATE_TOPIC}:"
-    kafka-topics --zookeeper ${UPDATE_ZK} --describe --topic ${UPDATE_TOPIC} 2>&1 | grep -vE "^mkdir: cannot create directory"
+    kafka-topics.sh --zookeeper ${UPDATE_ZK} --describe --topic ${UPDATE_TOPIC} 2>&1 | grep -vE "^mkdir: cannot create directory"
     echo
     ;;
 

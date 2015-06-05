@@ -1,14 +1,15 @@
 (ns flambo-example.spark
-  (:require  [flambo.api :as f]
-             [flambo.tuple :as ft]
-             [flambo.conf :as conf]
-             [cheshire.core :refer :all]
-             [clj-time.core :as time]
-             [clj-time.coerce :as tc]
-             [clj-time.format :as tf]
-             [clj-http.client :as client]
-             [environ.core :refer [env]]
-             [clojure.java.browse])
+  (:require  
+    [flambo.api :as f]
+    [flambo.tuple :as ft]
+    [flambo.conf :as conf]
+    [cheshire.core :refer :all]
+    [clj-time.core :as time]
+    [clj-time.coerce :as tc]
+    [clj-time.format :as tf]
+    [clj-http.client :as client]
+    [environ.core :refer [env]]
+    [clojure.java.browse])
   (:import ;[org.apache.log4j Level Logger]
            [org.slf4j Logger LoggerFactory])
   (:gen-class))

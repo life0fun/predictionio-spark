@@ -14,7 +14,7 @@
   https://repository.cloudera.com/content/repositories/cdh-releases-rcs/org/apache/spark/spark-streaming-kafka-assembly_2.10/1.3.0-cdh5.4.1/
 
   We install cloudera cdh jars under 
-    ~dev/cloudera/hadoop,hbase.
+    ~/dev/cloudera/hadoop,hbase.
     ~/dev/cloudera/hadoop/etc/hadoop
 
   Download needed jars from repository.cloudera cdh-releases-rcs.
@@ -88,7 +88,7 @@
     Test Vanilla YARN Application
       hadoop jar $HADOOP_HOME/share/hadoop/yarn/hadoop-yarn-applications-distributedshell-2.6.0-cdh5.4.1.jar -appname DistributedShell -jar $HADOOP_HOME/share/hadoop/yarn/hadoop-yarn-applications-distributedshell-2.6.0-cdh5.4.1.jar -shell_command "ps wwaxr -o pid,stat,%cpu,time,command | head -10" -num_containers 2 -master_memory 1024
 
-  ### start hadoop with 5 deamons, All must be presented.
+### start hadoop with 5 deamons, All must be presented.
       start-dfs.sh   // NameNode, DataNode, SecondaryNameNode
       start-yarn.sh  // ResourceManager, NodeManager
 
@@ -114,14 +114,20 @@
       scan 'URL_HITS'
 
 ## Start kafka and zookeeper
+  
+    brew install kafka
+    export KAFKA_HOME="/Users/hyan2/dev/cloudera/kafka"
+    export ZK_HOME="/Users/hyan2/dev/cloudera/zookeeper"
+    export PATH=$PATH:${KAFKA_HOME}/bin
 
+  
 ## Run oryx
   
-1. create bin/ folder contains run.sh and compute-clsasspath.sh.
+1. create bin/ folder contains oryx-run.sh and compute-clsasspath.sh.
   set the correct hadoop and cdh jar path. Need to provide kafka jar with kafka_*.jar so compute-classpath.sh can grep it.
   add missing jars, zkclient, spark-streaming-kafka_*, etc.
 
-2. create subdirectories for batch/serving/speed layer. Note can not have oryx- prefix as run.sh 
+2. cp oryx-batch/serving/speed subdirectories.
 
 3. Create a configuration file for the app, specify host names, ports and directories. In particular, choose data and model directories on HDFS that exist and will be accessible to the user running Oryx binaries.
 
@@ -136,10 +142,21 @@
 6. Kafka setup
     ./oryx-run.sh kafka-setup
 
-3. go to bin/ directory, Run the three Layers with:
+7. go to bin/ directory, Run the three Layers with:
 
-  ./run.sh --layer-jar ../batch/target/oryx-batch-2.0.0-SNAPSHOT.jar --conf ../example.conf 
+  ./oryx-run.sh kafka-setup --layer-jar ../oryx-batch/target/oryx-batch-2.0.0-SNAPSHOT.jar --conf ../oryx.conf
 
-  ./run.sh --layer-jar oryx-speed-2.0.0-SNAPSHOT.jar --conf example.conf
+  ./oryx-run.sh --layer-jar oryx-speed-2.0.0-SNAPSHOT.jar --conf example.conf
 
-  ./run.sh --layer-jar oryx-serving-2.0.0-SNAPSHOT.jar --conf example.conf
+  ./oryx-run.sh --layer-jar oryx-serving-2.0.0-SNAPSHOT.jar --conf example.conf
+
+
+## Deploy your customized App
+
+  Copy the resulting JAR file – call it myapp.jar – to the directory containing the Oryx binary JAR file it will be run with.
+
+  Change your Oryx .conf file to refer to your custom Batch, Speed or Serving implementation class, as appropriate.
+
+  When running the Batch / Speed / Serving Layers, add 
+    oryx-run.sh --app-jar myapp.jar
+
