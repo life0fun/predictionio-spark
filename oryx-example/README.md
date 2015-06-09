@@ -140,13 +140,36 @@
 
 
 6. Kafka setup
-    ./oryx-run.sh kafka-setup
+  We start kafka zookeeper first, then kafka broker.
+    clientPort=2181  // zookeeper port
+    broker.id=1
+    port=9092        // the port socket server listen on
+    
+  ~/dev/cloudera/kafka/bin/zookeeper-server-start.sh config/zookeeper.properties
+  ~/dev/cloudera/kafka/bin/kafka-server-start.sh config/server.properties
+
+  kafka config info defined in oryx.conf.
+    kafka-brokers = "localhost:9092"
+    zk-servers = "localhost:2181/kafka
+
+  ./oryx-run.sh kafka-setup --layer-jar ../oryx-batch/target/oryx-batch-2.0.0-SNAPSHOT.jar --conf ../oryx.conf
+
+    Input   ZK      localhost:2181/kafka
+            Kafka   localhost:9092
+            topic   OryxInput
+    Update  ZK      localhost:2181/kafka
+            Kafka   localhost:9092
+            topic   OryxUpdate
+
+  Modify oryx-run.sh 
+      kafka-topics.sh --create --zookeeper localhost:2181
+
 
 7. go to bin/ directory, Run the three Layers with:
 
   ./oryx-run.sh kafka-setup --layer-jar ../oryx-batch/target/oryx-batch-2.0.0-SNAPSHOT.jar --conf ../oryx.conf
 
-  ./oryx-run.sh --layer-jar oryx-speed-2.0.0-SNAPSHOT.jar --conf example.conf
+  ./oryx-run.sh batch --layer-jar ../oryx-batch/target/oryx-batch-2.0.0-SNAPSHOT.jar --conf ../oryx.conf
 
   ./oryx-run.sh --layer-jar oryx-serving-2.0.0-SNAPSHOT.jar --conf example.conf
 
