@@ -45,6 +45,7 @@ ls -1 \
  ${CDH_JARS_DIR}/commons-lang-2.6.jar \
  ${CDH_JARS_DIR}/protobuf-java-*.jar \
  ${CDH_JARS_DIR}/kafka_*.jar \
+ ${CDH_JARS_DIR}/kafka-clients-*.jar \
  ${CDH_JARS_DIR}/snappy-java-*.jar \
  ${CDH_JARS_DIR}/htrace-core-*.jar \
  | grep -E "[0-9]\\.jar$"

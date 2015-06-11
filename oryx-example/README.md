@@ -167,12 +167,15 @@
 
 7. go to bin/ directory, Run the three Layers with:
 
-  ./oryx-run.sh kafka-setup --layer-jar ../oryx-batch/target/oryx-batch-2.0.0-SNAPSHOT.jar --conf ../oryx.conf
-
   ./oryx-run.sh batch --layer-jar ../oryx-batch/target/oryx-batch-2.0.0-SNAPSHOT.jar --conf ../oryx.conf
+  
+    DirectKafkaInputDStream:96 ArrayBuffer(org.apache.spark.SparkException: Couldn't find leader offsets for Set())
 
-  ./oryx-run.sh --layer-jar oryx-serving-2.0.0-SNAPSHOT.jar --conf example.conf
+    KafkaUtils.createDirectKafkaDStream() must be called after msgs have been in kafka topic.
 
+  ./oryx-run.sh serving --layer-jar ../oryx-serving/
+
+    ClassNotFoundException: org.apache.kafka.common.utils.Utils
 
 ## Deploy your customized App
 
