@@ -120,6 +120,9 @@
     export ZK_HOME="/Users/hyan2/dev/cloudera/zookeeper"
     export PATH=$PATH:${KAFKA_HOME}/bin
 
+    First, start zk, then start kafka server
+    $KAFKA_HOME/bin/zookeeper-server-start.sh config/zookeeper.properties
+    $KAFKA_HOME/bin/kafka-server-start.sh config/server.properties
   
 ## Run oryx
   
@@ -129,8 +132,16 @@
 
 2. cp oryx-batch/serving/speed subdirectories.
 
-3. Create a configuration file for the app, specify host names, ports and directories. In particular, choose data and model directories on HDFS that exist and will be accessible to the user running Oryx binaries.
+3. oryx.conf app configuration
+  a. choose data and model directories on HDFS that exist and will be accessible to the user running Oryx binaries.
 
+  b. zk-servers = "localhost:2181"
+
+  To verify zookeeper
+  $ZK_HOME/bin/zkCli.sh
+    ls /
+    ls /zookeeper
+  
 4. specify SPARK_CONF_DIR and point to where spark-env.sh.
 
 5. modify oryx app conf file to reduce batch streaming executor mem and cores.
@@ -145,8 +156,8 @@
     broker.id=1
     port=9092        // the port socket server listen on
     
-  ~/dev/cloudera/kafka/bin/zookeeper-server-start.sh config/zookeeper.properties
-  ~/dev/cloudera/kafka/bin/kafka-server-start.sh config/server.properties
+    $KAFKA_HOME/bin/zookeeper-server-start.sh config/zookeeper.properties
+    $KAFKA_HOME/bin/kafka-server-start.sh config/server.properties
 
   kafka config info defined in oryx.conf.
     kafka-brokers = "localhost:9092"
@@ -173,9 +184,12 @@
 
     KafkaUtils.createDirectKafkaDStream() must be called after msgs have been in kafka topic.
 
-  ./oryx-run.sh serving --layer-jar ../oryx-serving/
 
-    ClassNotFoundException: org.apache.kafka.common.utils.Utils
+  ./oryx-run.sh serving --layer-jar ../oryx-serving/target/oryx-serving-2.0.0-SNAPSHOT.jar --conf ../oryx.conf
+    http://localhost:8080/
+
+  
+  ./oryx-run.sh speed --layer-jar ../oryx-speed/target/oryx-speed-2.0.0-SNAPSHOT.jar --conf ../oryx.conf
 
 ## Deploy your customized App
 
