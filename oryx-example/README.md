@@ -94,7 +94,10 @@
 
     /etc/hosts map 127.0.0.1 to hostname.
       127.0.0.1 l-sb872h2fd5-m.local
-  
+ 
+    localhost:50070/
+    http://localhost:8088/cluster
+
   hadoop jar mapreduce example.
       hadoop jar ./share/hadoop/mapreduce2/hadoop-mapreduce-examples-2.6.0-cdh5.4.1.jar pi 2 5
   yarn mapreduce example.
@@ -124,7 +127,7 @@
     $KAFKA_HOME/bin/zookeeper-server-start.sh config/zookeeper.properties
     $KAFKA_HOME/bin/kafka-server-start.sh config/server.properties
   
-## Run oryx
+## Run oryx with oryx.conf
   
 1. create bin/ folder contains oryx-run.sh and compute-clsasspath.sh.
   set the correct hadoop and cdh jar path. Need to provide kafka jar with kafka_*.jar so compute-classpath.sh can grep it.
@@ -149,8 +152,28 @@
     executor-cores = 2
     num-executors = 2
 
+6. Oryx.conf streaming section configures spark streaming args for any layer.
 
-6. Kafka setup
+  streaming {
+    executor-cores = 2
+    num-executors = 2
+    executor-memory = "400m"
+  }
+
+  org.apache.hadoop.yarn.server.resourcemanager.amlauncher.AMLauncher: 
+  Command to launch container container_1434230823335_0007_01_000001
+  {{JAVA_HOME}}/bin/java,-server,-Xmx512m,-Djava.io.tmpdir={{PWD}}/tmp,
+  '-Dspark.executor.memory=1g',
+  '-Dspark.app.name=OryxSpeedLayer',
+  '-Dspark.yarn.dist.files=../oryx.conf',
+  -Dspark.yarn.app.container.log.dir=<LOG_DIR>,
+  org.apache.spark.deploy.yarn.ExecutorLauncher,--arg,'192.168.0.102:58641',
+  --executor-memory,1024m,--executor-cores,2,
+  
+
+
+## kafka setup with oryx-run.sh
+
   We start kafka zookeeper first, then kafka broker.
     clientPort=2181  // zookeeper port
     broker.id=1
@@ -190,6 +213,10 @@
 
   
   ./oryx-run.sh speed --layer-jar ../oryx-speed/target/oryx-speed-2.0.0-SNAPSHOT.jar --conf ../oryx.conf
+
+    Name: OryxSpeedLayer
+    Application Type: SPARK
+      Uncaught exception: Invalid resource request, requested virtual cores < 0, or requested virtual cores > max configured, requestedVirtualCores=4, maxVirtualCores=2
 
 ## Deploy your customized App
 
