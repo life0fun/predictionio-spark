@@ -152,7 +152,7 @@
     executor-cores = 2
     num-executors = 2
 
-6. Oryx.conf streaming section configures spark streaming args for any layer.
+6. Oryx.conf streaming section configures spark streaming args that passes to yarn for any layer.
 
   streaming {
     executor-cores = 2
@@ -160,17 +160,18 @@
     executor-memory = "400m"
   }
 
-  org.apache.hadoop.yarn.server.resourcemanager.amlauncher.AMLauncher: 
-  Command to launch container container_1434230823335_0007_01_000001
-  {{JAVA_HOME}}/bin/java,-server,-Xmx512m,-Djava.io.tmpdir={{PWD}}/tmp,
-  '-Dspark.executor.memory=1g',
-  '-Dspark.app.name=OryxSpeedLayer',
-  '-Dspark.yarn.dist.files=../oryx.conf',
-  -Dspark.yarn.app.container.log.dir=<LOG_DIR>,
-  org.apache.spark.deploy.yarn.ExecutorLauncher,--arg,'192.168.0.102:58641',
-  --executor-memory,1024m,--executor-cores,2,
-  
+7. Under the hook, spark args are passed to spark.deploy.yarn.ExecutorLauncher to launch containers for spark jobs.
 
+    org.apache.hadoop.yarn.server.resourcemanager.amlauncher.AMLauncher: 
+    Command to launch container container_1434230823335_0007_01_000001
+    {{JAVA_HOME}}/bin/java,-server,-Xmx512m,-Djava.io.tmpdir={{PWD}}/tmp,
+    '-Dspark.executor.memory=1g',
+    '-Dspark.app.name=OryxSpeedLayer',
+    '-Dspark.yarn.dist.files=../oryx.conf',
+    -Dspark.yarn.app.container.log.dir=<LOG_DIR>,
+    org.apache.spark.deploy.yarn.ExecutorLauncher,--arg,'192.168.0.102:58641',
+    --executor-memory,1024m,--executor-cores,2,
+  
 
 ## kafka setup with oryx-run.sh
 
