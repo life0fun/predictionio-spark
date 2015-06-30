@@ -160,10 +160,11 @@
     executor-memory = "400m"
   }
 
-7. Under the hook, spark args are passed to spark.deploy.yarn.ExecutorLauncher to launch containers for spark jobs.
+7. Under the hook, spark args are passed to spark.deploy.yarn.ExecutorLauncher to launch containers for spark streaming jobs.
 
     org.apache.hadoop.yarn.server.resourcemanager.amlauncher.AMLauncher: 
     Command to launch container container_1434230823335_0007_01_000001
+    
     {{JAVA_HOME}}/bin/java,-server,-Xmx512m,-Djava.io.tmpdir={{PWD}}/tmp,
     '-Dspark.executor.memory=1g',
     '-Dspark.app.name=OryxSpeedLayer',
@@ -202,22 +203,23 @@
 
 7. go to bin/ directory, Run the three Layers with:
 
-  ./oryx-run.sh batch --layer-jar ../oryx-batch/target/oryx-batch-2.0.0-SNAPSHOT.jar --conf ../oryx.conf
+  Batch layer works by draining msg from OryxInput topic and transform data.
+
+    ./oryx-run.sh batch --layer-jar ../oryx-batch/target/oryx-batch-2.0.0-SNAPSHOT.jar --conf ../oryx.conf
   
-    DirectKafkaInputDStream:96 ArrayBuffer(org.apache.spark.SparkException: Couldn't find leader offsets for Set())
+      DirectKafkaInputDStream:96 ArrayBuffer(org.apache.spark.SparkException: Couldn't find leader offsets for Set())
 
-    KafkaUtils.createDirectKafkaDStream() must be called after msgs have been in kafka topic.
+      KafkaUtils.createDirectKafkaDStream() must be called after msgs have been in kafka topic.
 
+  Serving layer accept http requests.
 
-  ./oryx-run.sh serving --layer-jar ../oryx-serving/target/oryx-serving-2.0.0-SNAPSHOT.jar --conf ../oryx.conf
+    ./oryx-run.sh serving --layer-jar ../oryx-serving/target/oryx-serving-2.0.0-SNAPSHOT.jar --conf ../oryx.conf
     http://localhost:8080/
 
-  
-  ./oryx-run.sh speed --layer-jar ../oryx-speed/target/oryx-speed-2.0.0-SNAPSHOT.jar --conf ../oryx.conf
+  Speed layer process msg from OryxUpdate topic. It is also a spark streaming app.
 
-    Name: OryxSpeedLayer
-    Application Type: SPARK
-      Uncaught exception: Invalid resource request, requested virtual cores < 0, or requested virtual cores > max configured, requestedVirtualCores=4, maxVirtualCores=2
+    ./oryx-run.sh speed --layer-jar ../oryx-speed/target/oryx-speed-2.0.0-SNAPSHOT.jar --conf ../oryx.conf
+
 
 ## Deploy your customized App
 
