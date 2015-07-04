@@ -214,12 +214,19 @@
   Serving layer accept http requests.
 
     ./oryx-run.sh serving --layer-jar ../oryx-serving/target/oryx-serving-2.0.0-SNAPSHOT.jar --conf ../oryx.conf
+    
     http://localhost:8080/
 
   Speed layer process msg from OryxUpdate topic. It is also a spark streaming app.
 
     ./oryx-run.sh speed --layer-jar ../oryx-speed/target/oryx-speed-2.0.0-SNAPSHOT.jar --conf ../oryx.conf
 
+
+## Ingest data to server layer /ingest endpoint after running serving layer
+
+    wget --quiet --post-file ~/dev/ml/ml-100k/data.csv --output-document - \
+    --header "Content-Type: text/csv" \
+    http://localhost:8080/ingest
 
 ## Deploy your customized App
 
