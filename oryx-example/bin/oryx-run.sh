@@ -261,14 +261,14 @@ kafka-setup|kafka-tail|kafka-input)
     ;;
 
   kafka-tail)
-    kafka-console-consumer --zookeeper ${ZK} --whitelist ${INPUT_TOPIC},${UPDATE_TOPIC} 2>&1 | grep -vE "^mkdir: cannot create directory"
+    kafka-console-consumer.sh --zookeeper ${ZK} --whitelist ${INPUT_TOPIC},${UPDATE_TOPIC} 2>&1 | grep -vE "^mkdir: cannot create directory"
     ;;
 
   kafka-input)
     if [ ! -f "${INPUT_FILE}" ]; then
       usageAndExit "Input file ${INPUT_FILE} does not exist"
     fi
-    kafka-console-producer --broker-list ${INPUT_KAFKA} --topic ${INPUT_TOPIC} < "${INPUT_FILE}" 2>&1 | grep -vE "^mkdir: cannot create directory"
+    kafka-console-producer.sh --broker-list ${INPUT_KAFKA} --topic ${INPUT_TOPIC} < "${INPUT_FILE}" 2>&1 | grep -vE "^mkdir: cannot create directory"
     ;;
 
   esac
