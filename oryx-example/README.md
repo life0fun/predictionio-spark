@@ -206,10 +206,6 @@
   Batch layer works by draining msg from OryxInput topic and transform data.
 
     ./oryx-run.sh batch --layer-jar ../oryx-batch/target/oryx-batch-2.0.0-SNAPSHOT.jar --conf ../oryx.conf
-  
-      DirectKafkaInputDStream:96 ArrayBuffer(org.apache.spark.SparkException: Couldn't find leader offsets for Set())
-
-      KafkaUtils.createDirectKafkaDStream() must be called after msgs have been in kafka topic.
 
   Serving layer accept http requests.
 
@@ -223,10 +219,32 @@
 
 
 ## Ingest data to server layer /ingest endpoint after running serving layer
+    ./oryx-run.sh serving --layer-jar ../oryx-serving/target/oryx-serving-2.0.0-SNAPSHOT.jar --conf ../oryx.conf
 
-    wget --quiet --post-file ~/dev/ml/ml-100k/data.csv --output-document - \
+    wget --post-file ~/dev/ml/ml-100k/data.csv --output-document - \
     --header "Content-Type: text/csv" \
     http://localhost:8080/ingest
+
+  hdfs data storage is configured inside oryx.conf after ingestion to batch layer.
+    storage {
+      data-dir =  ${hdfs-base}"/data/"
+      model-dir = ${hdfs-base}"/model/"
+    }
+  where
+    hdfs-base = "hdfs:///users/hyan2/Oryx"
+
+  To verify data ingested into OryxInput topic.
+
+    ~/dev/cloudera/kafka/bin/kafka-console-consumer.sh --zookeeper localhost:2181 --topic OryxInput --from-beginning  
+
+    ./oryx-run.sh kafka-tail --layer-jar ../oryx-batch/target/oryx-batch-2.0.0-SNAPSHOT.jar --conf ../oryx.conf
+
+
+## Yarn resource config and batch layer configs
+  1. ~/dev/cloudera/hadoop/etc/hadoop/yarn-site.xml
+    yarn.nodemanager.resource.cpu-vcores = 8.
+  
+  2.
 
 ## Deploy your customized App
 
